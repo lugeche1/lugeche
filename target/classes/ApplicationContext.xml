@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://mybatis.org/schema/mybatis-spring
+	http://mybatis.org/schema/mybatis-spring-1.2.xsd
+	http://www.springframework.org/schema/tx 
+	http://www.springframework.org/schema/tx/spring-tx.xsd">
+	<!-- 扫描spring注解 -->
+	<context:component-scan
+		base-package="com.dicsion.lucar" />
+	<!-- mybatis的配置 -->
+	<!-- 设置数据库配置文件 -->
+	<context:property-override
+		location="classpath:db-c3p0.properties" />
+	<!-- 数据库设置 -->
+	<!-- 声明一个数据源 -->
+	<bean id="dataSource"
+		class="com.mchange.v2.c3p0.ComboPooledDataSource">
+	</bean>
+	<!-- 扫描mybatis映射 -->
+	<mybatis:scan base-package="com.artahs.newssystem.mapper" />
+	<!-- mybatis的数据库操作核心类 -->
+	<bean id="sessionFactory"
+		class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<!--声明式事务-->
+	<!-- 配置事物管理器 -->
+	<bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
+		<property ref="dataSource" name="dataSource"></property>
+	</bean>
+	<!--配置事物管理方案 -->
+	<!--注释方式 
+		<tx:annotation-driven transaction-manager="transactionManager"/>-->
+	<!-- 方案 -->
+	<tx:advice transaction-manager="transactionManager" id="txAdvice">
+		<tx:attributes >
+			<tx:method name="save*" propagation="REQUIRED"  read-only="false"/>
+			<tx:method name="up*"  propagation="REQUIRED"  read-only="false"/>
+			<tx:method name="delete*"  propagation="REQUIRED"  read-only="false"/>
+			<tx:method name="get*" propagation="SUPPORTS" />
+		</tx:attributes>
+	</tx:advice>
+	<!-- 事务的使用地点 -->
+	<aop:config>
+		<aop:pointcut id="aopPointcut" expression="execution(* com.dicsion.lucar.server.*.*(..))"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="aopPointcut"/>
+	</aop:config>
+	
+</beans>
